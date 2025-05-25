@@ -1,0 +1,16 @@
+{
+  "name": "social-media-services",
+  "version": "1.0.0",
+  "description": "Social Media Services with Stripe Integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "netlify dev",
+    "build": "# no build step needed"
+  },
+  "dependencies": {
+    "stripe": "^12.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^12.0.0"
+  }
+} 
