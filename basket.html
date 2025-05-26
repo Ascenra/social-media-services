@@ -353,10 +353,13 @@
 
                 } catch (error) {
                     console.error('Payment error:', error);
+<<<<<<< HEAD
                     // Add these lines for debugging
                     const errorText = await response.text();
                     console.error('Raw response:', errorText);
                     
+=======
+>>>>>>> e8cc43e3ea1d81613cbc48e3497ed3ea488aee76
                     const errorMessage = document.getElementById('error-message');
                     errorMessage.textContent = error.message || 'There was an error processing your payment. Please try again.';
                     errorMessage.style.display = 'block';
