@@ -26,8 +26,8 @@ exports.handler = async (event) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${process.env.URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.URL}/basket`,
+      success_url: `${process.env.SITE_URL}/thank-you.html`,
+      cancel_url: `${process.env.SITE_URL}/basket.html`,
     });
 
     return {
