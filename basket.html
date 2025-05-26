@@ -259,6 +259,15 @@
     </div>
 
     <script>
+        // Check for adblocker
+        const checkAdBlocker = async () => {
+            try {
+                await fetch('https://m.stripe.com/6');
+            } catch (error) {
+                showToast('Please disable your ad blocker to use the payment system.', 'error');
+            }
+        };
+        
         // Initialize Stripe
         const stripe = Stripe('pk_test_51QkqBzFzqkIkiBbjbkhThP681g7jX4FdkwQHZKMbvdeHjYzw2nwXyOqEEI0lJaxNGzHBSdUJCydITe6Cx11yHTxW00vn85CA8t');
 
@@ -275,6 +284,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Check for adblocker
+            checkAdBlocker();
+            
             // Get order details from localStorage
             const orderDetails = JSON.parse(localStorage.getItem('currentOrder'));
             if (!orderDetails) {
@@ -331,8 +343,9 @@
                     });
 
                     if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Network response was not ok');
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
                     const data = await response.json();
@@ -353,13 +366,10 @@
 
                 } catch (error) {
                     console.error('Payment error:', error);
-<<<<<<< HEAD
                     // Add these lines for debugging
                     const errorText = await response.text();
                     console.error('Raw response:', errorText);
                     
-=======
->>>>>>> e8cc43e3ea1d81613cbc48e3497ed3ea488aee76
                     const errorMessage = document.getElementById('error-message');
                     errorMessage.textContent = error.message || 'There was an error processing your payment. Please try again.';
                     errorMessage.style.display = 'block';
