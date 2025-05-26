@@ -312,7 +312,7 @@
                     console.log('Sending order details:', orderDetails);
 
                     // Create Stripe Checkout Session
-                    const response = await fetch('/api/create-checkout', {
+                    const response = await fetch('/.netlify/functions/create-checkout', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
