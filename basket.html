@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Basket - Social Media Services</title>
     <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
             --primary-color: #3B82F6;
@@ -134,29 +135,132 @@
             from { transform: translateX(100%); }
             to { transform: translateX(0); }
         }
+
+        .basket-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .basket-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .order-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .order-summary:last-child {
+            border-bottom: none;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .total-amount {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .payment-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        .payment-button:hover {
+            background: #0056b3;
+        }
+
+        .payment-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #loading-indicator {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="order-summary">
-            <div class="order-details">
-                <h3>Order Summary</h3>
-                <div id="order-info">
-                    <!-- Will be populated by JavaScript -->
-                </div>
-            </div>
+    <div class="basket-container">
+        <h1 class="basket-title">Your Order</h1>
+        <div class="order-details" id="order-summary">
+            <!-- Order details will be populated by JavaScript -->
         </div>
-
-        <div class="payment-options">
-            <button id="stripe-button" class="payment-button stripe-button">Pay with Card</button>
-            <button id="paypal-button" class="payment-button paypal-button">Pay with PayPal</button>
-            <button onclick="window.history.back()" class="payment-button back-button">Back to Services</button>
+        <div id="error-message" class="error-message"></div>
+        <div id="loading-indicator">
+            <div class="spinner"></div>
+            <p>Processing your payment...</p>
+        </div>
+        <div class="payment-buttons">
+            <button id="stripe-button" class="payment-button stripe-button">
+                <i class="fas fa-credit-card"></i>Pay with Card
+            </button>
+            <button id="paypal-button" class="payment-button paypal-button">
+                <i class="fab fa-paypal"></i>Pay with PayPal
+            </button>
         </div>
     </div>
 
     <script>
         // Initialize Stripe
-        const stripe = Stripe('pk_test_51QkqBzFzqkIkiBbjbkhThP681g7jX4FdkwQHZKMbvdeHjYzw2nwXyOqEEI0lJaxNGzHBSdUJCydITe6Cx11yHTxW00vn85CA8t'); // Replace YOUR_PUBLISHABLE_KEY with your actual key
+        const stripe = Stripe('pk_test_51QkqBzFzqkIkiBbjbkhThP681g7jX4FdkwQHZKMbvdeHjYzw2nwXyOqEEI0lJaxNGzHBSdUJCydITe6Cx11yHTxW00vn85CA8t');
 
         // Show toast notification
         function showToast(message, type = 'success') {
@@ -170,103 +274,117 @@
             }, 5000);
         }
 
-        // Load and display order details
-        function loadOrderDetails() {
-            const orderJson = localStorage.getItem('currentOrder');
-            if (!orderJson) {
-                showToast('No order found', 'error');
-                return null;
-            }
-
-            const order = JSON.parse(orderJson);
-            const orderInfo = document.getElementById('order-info');
-            
-            orderInfo.innerHTML = `
-                <div class="detail-row">
-                    <span>Service:</span>
-                    <span>${order.platform} ${order.service}</span>
-                </div>
-                <div class="detail-row">
-                    <span>Type:</span>
-                    <span>${order.type}</span>
-                </div>
-                <div class="detail-row">
-                    <span>Quantity:</span>
-                    <span>${order.quantity}</span>
-                </div>
-                <div class="detail-row">
-                    <span>Target URL:</span>
-                    <span>${order.url}</span>
-                </div>
-                <div class="detail-row total-row">
-                    <span>Total:</span>
-                    <span>$${order.price.toFixed(2)}</span>
-                </div>
-            `;
-
-            return order;
-        }
-
-        // Handle Stripe payment
-        async function handleStripePayment(order) {
-            try {
-                // Create Stripe session through Netlify Function
-                const response = await fetch('/.netlify/functions/create-checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ order })
-                });
-
-                const { sessionId, error } = await response.json();
-
-                if (error) {
-                    throw new Error(error);
-                }
-
-                // Redirect to Stripe Checkout
-                const { error: stripeError } = await stripe.redirectToCheckout({
-                    sessionId
-                });
-
-                if (stripeError) {
-                    throw new Error(stripeError.message);
-                }
-            } catch (error) {
-                console.error('Payment error:', error);
-                showToast(error.message || 'Payment failed. Please try again.', 'error');
-            }
-        }
-
-        // Handle PayPal payment
-        function handlePayPalPayment(order) {
-            // Store order details for thank you page
-            localStorage.setItem('pendingOrder', JSON.stringify({
-                ...order,
-                timestamp: new Date().toISOString()
-            }));
-
-            // Replace with your actual PayPal.me username
-            const paypalUrl = `https://paypal.me/YourPayPalUsername/${order.price}`;
-            window.location.href = paypalUrl;
-        }
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', () => {
-            const order = loadOrderDetails();
-            if (!order) {
-                window.location.href = '/';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get order details from localStorage
+            const orderDetails = JSON.parse(localStorage.getItem('currentOrder'));
+            if (!orderDetails) {
+                document.getElementById('order-summary').innerHTML = '<p>No order found. Please select a service first.</p>';
+                document.getElementById('stripe-button').disabled = true;
+                document.getElementById('paypal-button').disabled = true;
                 return;
             }
 
-            // Set up payment button handlers
-            document.getElementById('stripe-button').addEventListener('click', () => {
-                handleStripePayment(order);
+            // Display order details
+            document.getElementById('order-summary').innerHTML = `
+                <div class="order-summary">
+                    <div>
+                        <strong>${orderDetails.displayText}</strong><br>
+                        <small>${orderDetails.url}</small>
+                    </div>
+                    <div class="total-amount">$${orderDetails.price.toFixed(2)}</div>
+                </div>
+            `;
+
+            // Handle Stripe payment button click
+            document.getElementById('stripe-button').addEventListener('click', async function() {
+                try {
+                    const button = this;
+                    const loadingIndicator = document.getElementById('loading-indicator');
+                    const errorMessage = document.getElementById('error-message');
+                    const paypalButton = document.getElementById('paypal-button');
+
+                    // Disable buttons and show loading
+                    button.disabled = true;
+                    paypalButton.disabled = true;
+                    loadingIndicator.style.display = 'block';
+                    errorMessage.style.display = 'none';
+
+                    console.log('Sending order details:', orderDetails);
+
+                    // Create Stripe Checkout Session
+                    const response = await fetch('/.netlify/functions/create-checkout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            order: {
+                                platform: orderDetails.platform,
+                                service: orderDetails.service,
+                                type: orderDetails.type,
+                                quantity: orderDetails.quantity,
+                                url: orderDetails.url,
+                                price: orderDetails.price,
+                                displayText: orderDetails.displayText
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    console.log('Received session data:', data);
+
+                    if (!data.sessionId) {
+                        throw new Error('No session ID received from server');
+                    }
+
+                    // Redirect to Stripe Checkout
+                    const { error } = await stripe.redirectToCheckout({
+                        sessionId: data.sessionId
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    // Add these lines for debugging
+                    const errorText = await response.text();
+                    console.error('Raw response:', errorText);
+                    
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = error.message || 'There was an error processing your payment. Please try again.';
+                    errorMessage.style.display = 'block';
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    this.disabled = false;
+                    document.getElementById('paypal-button').disabled = false;
+                }
             });
 
-            document.getElementById('paypal-button').addEventListener('click', () => {
-                handlePayPalPayment(order);
+            // Handle PayPal payment button click
+            document.getElementById('paypal-button').addEventListener('click', function() {
+                const stripeButton = document.getElementById('stripe-button');
+                const paypalButton = this;
+                
+                // Disable both buttons during processing
+                stripeButton.disabled = true;
+                paypalButton.disabled = true;
+
+                // Store order details for thank you page
+                localStorage.setItem('pendingOrder', JSON.stringify({
+                    ...orderDetails,
+                    timestamp: new Date().toISOString()
+                }));
+
+                // Redirect to PayPal payment page
+                // Replace 'YourPayPalUsername' with your actual PayPal.me username
+                const paypalUrl = `https://paypal.me/YourPayPalUsername/${orderDetails.price.toFixed(2)}`;
+                window.location.href = paypalUrl;
             });
         });
     </script>
